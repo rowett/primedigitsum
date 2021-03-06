@@ -10,52 +10,51 @@ Linux, gcc, make, modern x64 CPU.
 
 
 ## Files
-* Makefile - to build the search application
-* ds.c     - the source code for the search application
-* ds       - the search application (once built)
-* pards    - a shell script that runs 'ds' in parallel across multiple cores each with a block of numbers to search
-* blocks/  - the folder containing the results from searching each number block
-* results  - a shell script that displays a list of each ds(n) found
-* tidy     - a shell script that removes any unfinished blocks (this is also done automatically when you run pards)
-* times    - a shell script that displays the processing time for each completed block in seconds
+* **Makefile** - to build the search application
+* **ds.c**     - the source code for the search application
+* **ds**       - the search application (once built)
+* **pards**    - a shell script that runs 'ds' in parallel across multiple cores each with a block of numbers to search
+* **blocks/**  - the folder containing the results from searching each number block
+* **results**  - a shell script that displays a list of each ds(n) found
+* **tidy**     - a shell script that removes any unfinished blocks (this is also done automatically when you run **pards**)
+* **times**    - a shell script that displays the processing time for each completed block in seconds
 
 
-# Building on Linux
+## Building
 * Ensure you have "make" installed: 
-    % sudo apt get make
+**% sudo apt get make**
 
 * Ensure you have "gcc" installed:
-    % sudo apt get gcc
+**% sudo apt get gcc**
 
-* Change directory to the folder containing both "Makefile" and "ds.c".
+* Change directory to the folder containing both **Makefile** and **ds.c**.
 
 * Build the application:
-    % make
+**% make**
 
 
-# Running
-* Create a folder for the results. The default folder name is "blocks". If you want a different folder name then you need to pass "-d <folder>" to all of the scripts.
-    % mkdir blocks
+## Running
+* Create a folder for the results. The default folder name is **blocks**. If you want a different folder name then you need to pass **-d <folder>** to the scripts.
+**% mkdir blocks**
 
-* Run "pards" to search using all CPU cores or "pards -c <number>" to specify number of cores:
-    % ./pards -c 4
+* Run **pards** to search using all CPU cores or **pards -c <number>** to specify number of cores:
+**% ./pards -c 4**
 
-* pards will show you which blocks are running on which core and then as they complete will show you how long the block took to process.
+* **pards** will show you which blocks are running on which core and then as they complete will show you how long the block took to process.
 
 
-# Display results
+## Display results
 * To output current results:
-    % ./results
+**% ./results**
 
-* or to display the update every 30 seconds:
-    % ./results 30
-
+* To monitor the results every 30 seconds:
+**% ./results 30**
 
 * To display a list of processing time (in seconds) for each completed block:
-    % ./times
+**% ./times**
 
 
 * To remove any unfinished blocks (typically caused when you interrupt pards):
-    % ./tidy
+**% ./tidy**
 Note: blocks are automatically tidied each time pards starts.
 
