@@ -6,7 +6,7 @@ The search space is split into blocks of 1e12 numbers and distributed for proces
 As each block is processed the results for that block are saved as text files in a "blocks" directory and a new block is allocated to the core.
 
 ## Requirements
-Linux, gcc, make, modern x64 CPU supporting POPCNT instruction.
+Linux, **gcc**, **make**, and a modern x64 CPU supporting POPCNT instruction.
 
 
 ## Files
@@ -21,10 +21,10 @@ Linux, gcc, make, modern x64 CPU supporting POPCNT instruction.
 
 
 ## Building
-* Ensure you have "make" installed: 
+* Ensure you have **make** installed: 
   * **% sudo apt install make**
 
-* Ensure you have "gcc" installed:
+* Ensure you have **gcc** installed:
   * **% sudo apt install gcc**
 
 * Change directory to the folder containing both **Makefile** and **ds.c**.
@@ -32,7 +32,7 @@ Linux, gcc, make, modern x64 CPU supporting POPCNT instruction.
 * Build the application:
   * **% make**
 
-* If the build fails may be because your CPU does not support the required POPCNT instruction.
+* If the build fails it may be because your CPU does not support the required POPCNT instruction.
 
 
 ## Running
