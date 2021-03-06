@@ -1817,10 +1817,9 @@ int main(int argc, char **argv) {
     // main search algo only supports 30k+7 values so check here for 3 and 5 if in requested range
     // don't need to check 2 since digit sum in binary is not prime
     start |= 1UL;
+    if (start < 3) start = 3;
     uint64_t tinyend = end;
-    if (tinyend > 5) {
-        tinyend = 5;
-    }
+    if (tinyend > 5) tinyend = 5;
 
     while (start <= tinyend && radix <= maxradix) {
         unsigned int r = radix;
