@@ -42,6 +42,8 @@ Linux, gcc, make, modern x64 CPU supporting POPCNT instruction.
 
 * **pards** will show you which blocks are running on which core and then as they complete will show you how long the block took to process.
 
+* When **pards** is first run it will start at block 0. If you stop it and then run it again it will skip any completed blocks and continue.
+
 
 ## Display results
 * To output current results:
@@ -52,7 +54,6 @@ Linux, gcc, make, modern x64 CPU supporting POPCNT instruction.
 
 * To display a list of processing time (in seconds) for each completed block:
   * **% ./times**
-
 
 * To remove any unfinished blocks (typically caused when you interrupt pards):
   * **% ./tidy**
