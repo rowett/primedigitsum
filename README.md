@@ -10,14 +10,14 @@ Linux, **gcc**, **make**, and a modern x64 CPU supporting POPCNT instruction.
 
 
 ## Files
-* **Makefile** - to build the search application
-* **ds.c**     - the source code for the search application
-* **ds**       - the search application (once built)
-* **pards**    - a shell script that runs 'ds' in parallel across multiple cores each with a block of numbers to search
-* **blocks/**  - the folder containing the results from searching each number block
-* **results**  - a shell script that displays a list of each ds(n) found
-* **tidy**     - a shell script that removes any unfinished blocks (this is also done automatically when you run **pards**)
-* **times**    - a shell script that displays the processing time for each completed block in seconds
+* **Makefile** - to build the search application.
+* **ds.c**     - the source code for the search application.
+* **ds**       - the search application (once built).
+* **pards**    - a shell script that runs **ds** in parallel across multiple cores each with a block of numbers to search.
+* **blocks/**  - the folder containing the results from searching each number block.
+* **results**  - a shell script that displays a list of each *ds(n)* found.
+* **tidy**     - a shell script that removes any unfinished blocks (this is also done automatically when you run **pards**).
+* **times**    - a shell script that displays the processing time for each completed block in seconds.
 
 
 ## Building
