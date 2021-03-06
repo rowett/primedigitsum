@@ -22,10 +22,10 @@ Linux, gcc, make, modern x64 CPU supporting POPCNT instruction.
 
 ## Building
 * Ensure you have "make" installed: 
-  * **% sudo apt get make**
+  * **% sudo apt install make**
 
 * Ensure you have "gcc" installed:
-  * **% sudo apt get gcc**
+  * **% sudo apt install gcc**
 
 * Change directory to the folder containing both **Makefile** and **ds.c**.
 
