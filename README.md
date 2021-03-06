@@ -1,5 +1,5 @@
+# ds(n)
 Let ds(n) be the smallest prime number where the digits sums of it when written in bases 2 to n+1 are all prime.
-
 
 This software searches for ds(n) prime numbers. The search can be parallelized across multiple cores.
 The search space is split into blocks of 1e12 numbers and distributed for processing amongst available cores.
@@ -9,61 +9,53 @@ Requirements:
 Linux, gcc, make, modern x64 CPU.
 
 
-
-Files:
-Makefile - to build the search application
-ds.c     - the source code for the search application
-ds       - the search application (once built)
-pards    - a shell script that runs 'ds' in parallel across multiple cores each with a block of numbers to search
-blocks/  - the folder containing the results from searching each number block
-monitor  - a shell script that displays the search progress in each block
-results  - a shell script that displays a list of each ds(n) found
-tidy     - a shell script that removes any unfinished blocks (this is also done automatically when you run pards)
-times    - a shell script that displays the processing time for each completed block in seconds
+## Files
+* Makefile - to build the search application
+* ds.c     - the source code for the search application
+* ds       - the search application (once built)
+* pards    - a shell script that runs 'ds' in parallel across multiple cores each with a block of numbers to search
+* blocks/  - the folder containing the results from searching each number block
+* results  - a shell script that displays a list of each ds(n) found
+* tidy     - a shell script that removes any unfinished blocks (this is also done automatically when you run pards)
+* times    - a shell script that displays the processing time for each completed block in seconds
 
 
-To build:
-1. Ensure you have "make" installed: 
+# Building on Linux
+* Ensure you have "make" installed: 
     % sudo apt get make
 
-2. Ensure you have "gcc" installed:
+* Ensure you have "gcc" installed:
     % sudo apt get gcc
 
-3. Change directory to the folder containing both "Makefile" and "ds.c".
+* Change directory to the folder containing both "Makefile" and "ds.c".
 
-4. Build the application:
+* Build the application:
     % make
 
 
-To run:
-1. Create a folder for the results. The default folder name is "blocks". If you want a different folder name then you need to pass "-d <folder>" to all of the scripts.
+# Running
+* Create a folder for the results. The default folder name is "blocks". If you want a different folder name then you need to pass "-d <folder>" to all of the scripts.
     % mkdir blocks
 
-2. Run "pards" to search using all CPU cores or "pards -c <number>" to specify number of cores:
+* Run "pards" to search using all CPU cores or "pards -c <number>" to specify number of cores:
     % ./pards -c 4
 
-3. pards will show you whch blocks are running on which core and then as they complete will show you how long the block took to process.
+* pards will show you which blocks are running on which core and then as they complete will show you how long the block took to process.
 
 
-To output current results:
+# Display results
+* To output current results:
     % ./results
 
-or to display the update every 30 seconds:
+* or to display the update every 30 seconds:
     % ./results 30
 
 
-To output the status of the completed blocks and blocks in progress:
-    % ./monitor
-
-or to update the monitor every 30 seconds:
-    % ./monitor 30
-
-
-4. To display a list of processing time (in seconds) for each completed block:
+* To display a list of processing time (in seconds) for each completed block:
     % ./times
 
 
-5. To remove any unfinished blocks (typically caused when you interrupt pards):
+* To remove any unfinished blocks (typically caused when you interrupt pards):
     % ./tidy
 Note: blocks are automatically tidied each time pards starts.
 
