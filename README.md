@@ -6,7 +6,7 @@ The search space is split into blocks of 1e12 numbers and distributed for proces
 As each block is processed the results for that block are saved as text files in a "blocks" directory and a new block is allocated to the core.
 
 ## Requirements
-Linux, **gcc**, **make**, and a modern x64 CPU supporting POPCNT instruction.
+Linux, **gcc**, **make**, and a modern x64 CPU that supports the POPCNT instruction.
 
 
 ## Files
