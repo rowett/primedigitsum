@@ -32,6 +32,8 @@ Linux, gcc, make, modern x64 CPU supporting POPCNT instruction.
 * Build the application:
   * **% make**
 
+* If the build fails may be because your CPU does not support the required POPCNT instruction.
+
 
 ## Running
 * Create a folder for the results. The default folder name is **blocks**. If you want a different folder name then you need to pass **-d _folder_** to the scripts.
