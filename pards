@@ -1,0 +1,216 @@
+#! /bin/bash
+# run prime search in parallel over multiple processor cores
+# auto start at last successfully completed block
+# Usage:
+# par [-c cores] [-d directory] [-s starting block]
+#   -c		number of cores to use
+#   -d		directory for results
+#   -r          starting number base
+#   -s          starting block number
+
+# set program name and command usage
+prog_name=`basename $0`
+usage="$prog_name [-c cores] [-d directory] [-r radix] [-s start]\n  -c\tnumber of cores to use\n  -d\tdirectory\n  -r\tstarting radix\n  -s\tstarting block number"
+
+# report error and exit
+error_exit() {
+	s_red=`tput setaf 1`
+	s_standard=`tput setaf 7`
+	echo -e "${s_red}${prog_name}: $1${s_standard}\n$usage"
+	exit 1
+}
+
+# read number of processors
+processors=`nproc`
+num_cores=$processors
+
+# block directory
+dir=blocks
+
+# starting block
+block_num=0
+
+# maximum number base for digit sum primes
+max_base=40
+
+# minimum number base for digit sum primes
+min_base=2
+
+# regular expression for number validation
+re='^[0-9]+$'
+
+# check for valid options
+while getopts "c:d:r:s:" opt
+do
+	case "$opt" in
+	# number of cores
+	c)	num_cores=$OPTARG
+		# check it is a number
+		if ! [[ $num_cores =~ $re ]]
+		then
+			error_exit "cores must be a number"
+		else
+			# check it is in range
+			if [[ $num_cores -lt 1 || $num_cores -gt $processors ]]
+			then
+				error_exit "cores must be from 1 to $processors"
+			fi
+		fi
+		;;
+	# blocks directory
+	d)	dir=$OPTARG
+		# check it is a directory
+		if [[ ! -d "$dir" ]]
+		then
+			error_exit "$dir: no such directory"
+		fi
+		;;
+	# starting number base for digit sum primes
+	r)	min_base=$OPTARG
+		# check it is a number
+		if ! [[ $min_base =~ $re ]]
+		then
+			error_exit "radix must be a number"
+		else
+			# check it is in range
+			if [[ $min_base -lt 2 || $min_base -gt $max_base ]]
+			then
+				error_exit "radix must be from 2 to $max_base"
+			fi
+		fi
+		;;
+        # starting block number
+        s)      block_num=$OPTARG
+		# check it is a number
+		if ! [[ $block_num =~ $re ]]
+		then
+			error_exit "starting block must be a number"
+		fi
+		;;
+	# other flags are invalid
+	\?)	error_exit "invalid argument $OPTARG"
+	esac
+done
+shift $((OPTIND-1))
+
+# number of zeroes to add to block number
+zeroes=000000000000
+
+# check the directory exists
+if [[ ! -d "$dir" ]]
+then
+	echo "`basename $0`: $dir: no such directory"
+	exit 1
+fi
+
+# check for partical blocks
+set -- $dir/*.txt
+if [[ -e $1 ]]
+then
+    # tidy any partial blocks
+    partials=`grep -L "Time" $dir/*.txt`
+    for current in $partials
+    do
+        echo "Deleted unfinished block $current"
+        rm -f $current
+    done
+fi
+
+# skip blocks already processed
+while [[ -e $dir/$block_num.txt ]]
+do
+        block_num=$((block_num+1))
+done
+
+if [[ $num_cores == $processors ]]
+then
+        echo "Using all $num_cores processor cores"
+else
+        echo "Using $num_cores of $processors processor cores"
+fi
+echo "Starting block: $block_num"
+echo "Block size: 1${zeroes}"
+echo "Number bases: $min_base to $max_base"
+
+# start a block on each processor core
+proc_num=0
+active_blocks=""
+while [[ $proc_num -lt $num_cores ]]
+do
+        # compute the start and end of the range
+        start_num=$block_num$zeroes
+        end_num=$((block_num+1))$zeroes
+        
+        # start the block
+        date=`date`
+        echo "Started block $block_num on core $proc_num [$date] $min_base $max_base"
+        active_blocks="$active_blocks $block_num"
+        (./ds $start_num $end_num $min_base $max_base > $dir/$block_num.tmp; mv $dir/$block_num.tmp $dir/$block_num.txt) &
+
+        # find the next unprocessed block number
+        block_num=$((block_num+1))
+        while [[ -e $dir/$block_num.txt ]]
+        do
+                block_num=$((block_num+1))
+        done
+
+        # decrement processor number
+        proc_num=$((proc_num+1))
+done
+
+# check for completed blocks and start new ones
+while [[ true ]]
+do
+        # wait for check interval
+        sleep 2
+
+        # update active list
+        new_active=""
+        for current in $active_blocks
+        do
+                # check if the block is still processing
+                if [[ -e $dir/$current.tmp ]]
+                then
+                        # still processing so add to new active list
+                        new_active="$new_active $current"
+                else
+                        # completed so find next unprocessed block
+                        while [[ -e $dir/$block_num.txt ]]
+                        do
+                                block_num=$((block_num+1))
+                        done
+
+                        # get processing time from completed block
+                        time=`grep "Time:" $dir/${current}.txt | sed "s/Time: //"`
+                        
+                        # get highest consecutive primes
+                        highest=`grep "^No matches" $dir/${current}.txt | sed "s/^No matches after \([^ ][^ ]*\).*/\1/"`
+                        if ! [[ $highest == "" || $highest == "--" ]]
+                        then
+                                highest=$((highest+2))
+                                if [[ $highest -gt $min_base ]]
+                                then
+                                    min_base=$highest
+                                fi
+                                echo "Found $((highest-2))!"
+                        fi
+
+                        # start new block
+                        date=`date`
+                        echo "Started block $block_num after $current completed in $time [$date] $min_base $max_base"
+
+                        # compute the start and end of the range
+                        start_num=$block_num$zeroes
+                        end_num=$((block_num+1))$zeroes
+
+                        # invoke search
+                        (./ds $start_num $end_num $min_base $max_base > $dir/$block_num.tmp; mv $dir/$block_num.tmp $dir/$block_num.txt) &
+                        new_active="$new_active $block_num"
+                        block_num=$((block_num+1))
+                fi
+        done
+
+        # update the active list
+        active_blocks=$new_active
+done
+

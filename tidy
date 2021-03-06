@@ -1,0 +1,73 @@
+#! /bin/bash
+# tidy (remove) unfinished blocks
+#   -d		directory for results
+#   -n          do not delete just display file names
+
+# set program name and command usage
+prog_name=`basename $0`
+usage="$prog_name [-d directory] -n\n  -d directory\n  -n do not delete files\n"
+
+# report error and exit
+error_exit() {
+	s_red=`tput setaf 1`
+	s_standard=`tput setaf 7`
+	echo -e "${s_red}${prog_name}: $1${s_standard}\n$usage"
+	exit 1
+}
+
+# block directory
+dir=blocks
+candelete=1
+
+# check for valid options
+while getopts "d:n" opt
+do
+	case "$opt" in
+	# blocks directory
+	d)	dir=$OPTARG
+		# check it is a directory
+		if [[ ! -d "$dir" ]]
+		then
+			error_exit "$dir: no such directory"
+		fi
+		;;
+        n)      candelete=0
+                ;;
+	# other flags are invalid
+	\?)	error_exit "invalid argument $OPTARG"
+	esac
+done
+
+# starting block
+block_num=0
+
+# check the directory exists
+if [[ ! -d "$dir" ]]
+then
+	echo "`basename $0`: $dir: no such directory"
+	exit 1
+fi
+
+# delete unfinished blocks
+set -- $dir/*.txt
+if [[ -f $1 ]]
+then
+    partials=`grep -L "Time" $dir/*.txt`
+    if [[ $partials == "" ]]
+    then
+        echo "No unfinished blocks found"
+    else
+        for current in $partials
+        do
+            if [[ $candelete -eq 1 ]]
+            then
+                echo "Deleted unfinished block: $current"
+                rm -f $current
+            else
+                echo "Found unfinished block: $current"
+            fi
+        done
+    fi
+else
+    echo "No unfinished blocks found"
+fi

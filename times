@@ -1,0 +1,4 @@
+#! /bin/bash
+# output a report containing block number and elapsed time in seconds for each block
+
+grep "Time" blocks/* | sed 's@blocks/\([0-9][0-9]*\)\.txt:Time: \([0-9][0-9]*\).*@\1 \2@' | sort -n

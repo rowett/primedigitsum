@@ -1,0 +1,126 @@
+#! /bin/bash
+# sort num output files to show results
+# Usage: results [-d directory] [interval]
+#   -d        directory for results
+#   interval  refresh every interval seconds
+#
+# sort commands arguments
+# -r reverse order (highest number of primes first)
+# -k1 key field is first (the number of primes)
+# -n sort order is numeric
+# -u unique only (using the key field)
+
+# set program name and command usage
+prog_name=`basename $0`
+usage="$prog_name [-d directory] [interval]\n"
+
+# report error and exit
+error_exit() {
+        s_red=`tput setaf 1`
+        s_standard=`tput setaf 7`
+        echo -e "${s_red}${prog_name}: $1${s_standard}\n$usage"
+        exit 1
+}
+
+# blocks directory
+dir=blocks
+
+# refresh interval
+refresh_interval=0
+
+# pattern match number
+re='^[0-9]+$'
+
+# check for valid options
+while getopts "d:" opt
+do
+        case "$opt" in
+        # blocks directory
+        d)      dir=$OPTARG
+                # check it is a directory
+                if [[ ! -d "$dir" ]]
+                then
+                        error_exit "$dir: no such directory"
+                fi
+                ;;
+        # other flags are invalid
+        \?)     error_exit "invalid argument $OPTARG"
+        esac
+done
+shift $((OPTIND-1))
+
+# check for interval
+if [[ "$1" != "" ]]
+then
+        # read the refresh interval
+        refresh_interval=$1
+
+        # check it is a number
+        if ! [[ $refresh_interval =~ $re ]]
+        then
+                error_exit "interval must be a number"
+        else
+                # check it is in range
+                if [[ $refresh_interval -lt 1 ]]
+                then
+                        error_exit "interval must be positive"
+                fi
+        fi
+fi
+
+# define colour output for echo and sed commands
+if [[ $refresh_interval -gt 0 ]]
+then
+        s_blue=`tput setaf 4`
+        s_red=`tput setaf 1`
+        s_cyan=`tput setaf 6`
+        s_green=`tput setaf 2`
+        s_standard=`tput setaf 7`
+else
+        s_blue=""
+        s_red=""
+        s_cyan=""
+        s_green=""
+        s_standard=""
+fi
+
+# check the blocks directory exists
+if [[ ! -d $dir ]]
+then
+	error_exit "$dir: no such directory"
+fi
+
+# change to the blocks directory
+cd $dir
+
+# set tab width to 8
+tabs -8
+
+# repeat forever
+while [ true ]
+do
+	# create the list of result files
+	f=`echo *.txt | tr " " "\n" | sort -n | tr "\n" " "`
+
+	# clear display
+        if [[ $refresh_interval -ne 0 ]]
+        then
+                clear
+        fi
+
+	# output the header
+	echo -e "${s_cyan}Primes\tValues${s_standard}"
+
+	# sort the results files removing duplicate keys
+	sort -r -k1 -n -u $f | grep -v "[No|Check|Init]" | sed "s/\(.*\):/${s_green}\1\t${s_standard}/;s/ \[/\[/"
+
+        # exit if refresh is zero
+        if [[ $refresh_interval -eq 0 ]]
+        then
+            exit 0
+        fi
+
+	# pause for the refresh interval
+        echo -en "\n${s_blue}Refreshing every $refresh_interval seconds...${s_standard}"
+	sleep $refresh_interval
+done
