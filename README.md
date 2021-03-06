@@ -34,10 +34,10 @@ Linux, gcc, make, modern x64 CPU supporting POPCNT instruction.
 
 
 ## Running
-* Create a folder for the results. The default folder name is **blocks**. If you want a different folder name then you need to pass **-d <folder>** to the scripts.
+* Create a folder for the results. The default folder name is **blocks**. If you want a different folder name then you need to pass **-d _folder_** to the scripts.
   * **% mkdir blocks**
 
-* Run **pards** to search using all CPU cores or **pards -c <number>** to specify number of cores:
+* Run **pards** to search using all CPU cores or **pards -c _number_** to specify number of cores:
   * **% ./pards -c 4**
 
 * **pards** will show you which blocks are running on which core and then as they complete will show you how long the block took to process.
