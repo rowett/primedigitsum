@@ -64,7 +64,9 @@ Linux, **gcc**, **make**, and a modern x64 CPU that supports the POPCNT instruct
 
 ## A note on performance
 On an AMD3950 **ds** can search a block of 1E+12 numbers in around 5 minutes on a single CPU core. Multiple blocks can be searched in parallel using the **pards** script.
+
 *ds(22)* can be found in about 12 seconds on a single core.
+
 *ds(31)* can be found in about 3 days on a single core, or in about 2 hours and 30 minutes using 30 cores.
 
 
