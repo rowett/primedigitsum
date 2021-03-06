@@ -47,7 +47,7 @@ Linux, **gcc**, **make**, and a modern x64 CPU that supports the POPCNT instruct
 * When **pards** is first run it will start at block 0. If you stop it and then run it again it will skip any completed blocks and continue.
 
 
-## Display results
+## Displaying results
 * To output current results:
   * **% ./results**
 
@@ -60,4 +60,11 @@ Linux, **gcc**, **make**, and a modern x64 CPU that supports the POPCNT instruct
 * To remove any unfinished blocks (typically caused when you interrupt **pards**):
   * **% ./tidy**
   * Note: blocks are automatically tidied each time **pards** starts.
+
+
+## A note on performance
+On an AMD3950 **ds** can search a block of 1E+12 numbers in around 5 minutes on a single CPU core. Multiple blocks can be searched in parallel using the **pards** script.
+*ds(22)* can be found in about 12 seconds on a single core.
+*ds(31)* can be found in about 3 days on a single core, or in about 2 hours and 30 minutes using 30 cores.
+
 
