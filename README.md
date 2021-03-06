@@ -1,12 +1,12 @@
 # ds(n)
-Let ds(n) be the smallest prime number where the digits sums of it when written in bases 2 to n+1 are all prime.
+Let ds(n) be the smallest prime number where the digit sums of it when written in bases 2 to n+1 are all prime.
 
 This software searches for ds(n) prime numbers. The search can be parallelized across multiple cores.
 The search space is split into blocks of 1e12 numbers and distributed for processing amongst available cores.
 As each block is processed the results for that block are saved as text files in a "blocks" directory and a new block is allocated to the core.
 
-Requirements:
-Linux, gcc, make, modern x64 CPU.
+## Requirements
+Linux, gcc, make, modern x64 CPU supporting POPCNT instruction.
 
 
 ## Files
@@ -22,39 +22,39 @@ Linux, gcc, make, modern x64 CPU.
 
 ## Building
 * Ensure you have "make" installed: 
-**% sudo apt get make**
+  * **% sudo apt get make**
 
 * Ensure you have "gcc" installed:
-**% sudo apt get gcc**
+  * **% sudo apt get gcc**
 
 * Change directory to the folder containing both **Makefile** and **ds.c**.
 
 * Build the application:
-**% make**
+  * **% make**
 
 
 ## Running
 * Create a folder for the results. The default folder name is **blocks**. If you want a different folder name then you need to pass **-d <folder>** to the scripts.
-**% mkdir blocks**
+  * **% mkdir blocks**
 
 * Run **pards** to search using all CPU cores or **pards -c <number>** to specify number of cores:
-**% ./pards -c 4**
+  * **% ./pards -c 4**
 
 * **pards** will show you which blocks are running on which core and then as they complete will show you how long the block took to process.
 
 
 ## Display results
 * To output current results:
-**% ./results**
+  * **% ./results**
 
 * To monitor the results every 30 seconds:
-**% ./results 30**
+  * **% ./results 30**
 
 * To display a list of processing time (in seconds) for each completed block:
-**% ./times**
+  * **% ./times**
 
 
 * To remove any unfinished blocks (typically caused when you interrupt pards):
-**% ./tidy**
-Note: blocks are automatically tidied each time pards starts.
+  * **% ./tidy**
+  * Note: blocks are automatically tidied each time pards starts.
 
