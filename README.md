@@ -52,10 +52,10 @@ Linux, gcc, make, modern x64 CPU supporting POPCNT instruction.
 * To monitor the results every 30 seconds:
   * **% ./results 30**
 
-* To display a list of processing time (in seconds) for each completed block:
+* To display a list of completed blocks with their processing time (in seconds):
   * **% ./times**
 
-* To remove any unfinished blocks (typically caused when you interrupt pards):
+* To remove any unfinished blocks (typically caused when you interrupt **pards**):
   * **% ./tidy**
-  * Note: blocks are automatically tidied each time pards starts.
+  * Note: blocks are automatically tidied each time **pards** starts.
 
