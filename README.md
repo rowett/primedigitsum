@@ -1,7 +1,7 @@
 # ds(n)
-Let ds(n) be the smallest prime number where the digit sums of it when written in bases 2 to n+1 are all prime.
+Let *ds(n)* be the smallest prime number where the digit sums of it when written in bases 2 to n+1 are all prime.
 
-This software searches for ds(n) prime numbers. The search can be parallelized across multiple cores.
+This software searches for *ds(n)* prime numbers. The search can be parallelized across multiple cores.
 The search space is split into blocks of 1e12 numbers and distributed for processing amongst available cores.
 As each block is processed the results for that block are saved as text files in a "blocks" directory and a new block is allocated to the core.
 
