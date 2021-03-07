@@ -2,7 +2,7 @@
 Let *ds(n)* be the smallest prime number where the digit sums of it when written in bases 2 to n+1 are all prime.
 
 This software searches for *ds(n)* prime numbers. The search can be parallelized across multiple cores.
-The search space is split into blocks of 1e12 numbers and distributed for processing amongst available cores.
+The search space is split into blocks of 1E12 numbers and distributed for processing amongst available cores.
 As each block is processed the result for that block is saved as text file in a **blocks/** directory and a new block is allocated to the core.
 
 ## Requirements
@@ -59,7 +59,7 @@ Linux, **gcc**, **make**, and a modern x64 CPU that supports the POPCNT instruct
 
 
 ## A note on performance
-On an AMD3950 **ds** can search a block of 1E+12 numbers in around 5 minutes on a single CPU core. Multiple blocks can be searched in parallel using the **pards** script.
+On an AMD3950 **ds** can search a block of 1E12 numbers in around 5 minutes on a single CPU core. Multiple blocks can be searched in parallel using the **pards** script.
 
 * *ds(22)* can be found in about 12 seconds on a single core.
   * **% ./ds 0 100000000000 2 23**
