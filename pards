@@ -2,15 +2,15 @@
 # run prime search in parallel over multiple processor cores
 # auto start at last successfully completed block
 # Usage:
-# par [-c cores] [-d directory] [-s starting block]
+# par [-c cores] [-d directory] [-r starting radix] [-s starting block]
 #   -c		number of cores to use
-#   -d		directory for results
-#   -r          starting number base
+#   -d		results directory
+#   -r          starting radix
 #   -s          starting block number
 
 # set program name and command usage
 prog_name=`basename $0`
-usage="$prog_name [-c cores] [-d directory] [-r radix] [-s start]\n  -c\tnumber of cores to use\n  -d\tdirectory\n  -r\tstarting radix\n  -s\tstarting block number"
+usage="$prog_name [-c cores] [-d directory] [-r radix] [-s start]\n  -c\tnumber of cores to use\n  -d\tresults directory\n  -r\tstarting radix\n  -s\tstarting block number"
 
 # report error and exit
 error_exit() {
