@@ -800,7 +800,6 @@ gate32++;
 
         // go to next value
         from += 6;
-
     }
 
     // not found
@@ -1271,7 +1270,6 @@ primes++;
 
         // go to next value
         from += 6;
-
     }
 
     // not found
@@ -1718,7 +1716,6 @@ primes++;
 
         // go to next value
         from += 6;
-
     }
 
     // not found
