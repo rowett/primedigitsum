@@ -17,7 +17,6 @@ Linux, **gcc**, **make**, and a modern x64 CPU that supports the POPCNT instruct
 * **blocks/**  - the folder containing the results from searching each number block.
 * **results**  - a shell script that displays a list of each *ds(n)* found.
 * **tidy**     - a shell script that removes any unfinished blocks (this is also done automatically when you run **pards**).
-* **times**    - a shell script that displays the processing time for each completed block in seconds.
 
 
 ## Building
@@ -51,11 +50,8 @@ Linux, **gcc**, **make**, and a modern x64 CPU that supports the POPCNT instruct
 * To output current results:
   * **% ./results**
 
-* To monitor the results every 30 seconds:
-  * **% ./results 30**
-
-* To display a list of completed blocks with their processing time (in seconds):
-  * **% ./times**
+* To monitor the results every 60 seconds:
+  * **% ./results 60**
 
 * To remove any unfinished blocks (typically caused when you interrupt **pards**):
   * **% ./tidy**
@@ -69,5 +65,6 @@ On an AMD3950 **ds** can search a block of 1E+12 numbers in around 5 minutes on 
   * **% ./ds 0 100000000000 2 23**
 
 * *ds(31)* can be found in about 3 days on a single core, or in about 2 hours and 30 minutes using 30 cores.
+  * **% ./pards -c 30**
 
 

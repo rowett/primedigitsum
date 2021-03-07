@@ -1,12 +1,18 @@
-# Makefile for num
+# Makefile for building ds
+# requires a x64 CPU that supports the POPCNT instruction
 
-# flags and folders
+# uncomment the next line if you want search metrics to be output, small performance penalty if enabled
 #EXTRAFLAGS=-DMETRICS
-CFLAGS=-Ofast -Wextra -march=native $(EXTRAFLAGS)
-#CFLAGS=-g -Wextra -march=native $(EXTRAFLAGS)
+
+# use the optimizer, extra warnings, and build for the architecture of the build machine
+CFLAGS=-O3 -Wextra -march=native $(EXTRAFLAGS)
+
+# need the math library
 LIBS=-lm
+
+# use gcc as the C-compiler, change if you want a different compiler
 CC=gcc
 
-# primegen executable which generates prime data file
+# ds executable
 ds: ds.c
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
