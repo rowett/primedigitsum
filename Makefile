@@ -5,7 +5,7 @@
 #EXTRAFLAGS=-DMETRICS
 
 # use the optimizer, extra warnings, and build for the architecture of the build machine
-CFLAGS=-O3 -Wextra -march=native $(EXTRAFLAGS)
+CFLAGS=-Ofast -Wextra -march=native $(EXTRAFLAGS)
 
 # need the math library
 LIBS=-lm

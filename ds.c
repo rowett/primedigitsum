@@ -35,6 +35,9 @@ static uint64_t primes = 0;
 static uint64_t sub16 = 0;
 static uint64_t plus16 = 0;
 static uint64_t plus32 = 0;
+#define METRIC(x) x++;
+#else
+#define METRIC(x)
 #endif
 
 
@@ -43,11 +46,11 @@ bool *smallprimes = NULL;
 
 
 // lookup arrays for 4 digit sums by radix
-unsigned char **digitSumLookup = NULL;
+uint8_t **digitSumLookup = NULL;
 
 
 // compute the digit sum of the given value in the given radix
-unsigned int sumDigits(uint64_t value, unsigned int radix) {
+uint32_t sumDigits(uint64_t value, const uint32_t radix) {
     // zero the sum
     uint64_t sum = 0;
     uint64_t dividor = 0;
@@ -65,16 +68,16 @@ unsigned int sumDigits(uint64_t value, unsigned int radix) {
 
 
 // initialise 4 digit sum lookup array
-void initDigitSums(const unsigned int maxRadix, const unsigned int digits) {
-    unsigned int i, j, r, arraySize;
-    unsigned char *current = NULL;
-    unsigned long allocated = 0;
+void initDigitSums(const uint32_t maxRadix, const uint32_t digits) {
+    uint32_t i, j, r, arraySize;
+    uint8_t *current = NULL;
+    uint64_t allocated = 0;
 
     // allocate the array of lookup arrays
-    digitSumLookup = (unsigned char **)malloc((maxRadix  + 1) * sizeof(unsigned char *));
+    digitSumLookup = (uint8_t **)malloc((maxRadix  + 1) * sizeof(uint8_t *));
     if (digitSumLookup) {
         // keep track of allocation size
-        allocated = (maxRadix  + 1) * sizeof(unsigned char *);
+        allocated = (maxRadix  + 1) * sizeof(uint8_t *);
 
         // for each radix
         for (r = 2; r <= maxRadix; r++) {
@@ -83,9 +86,9 @@ void initDigitSums(const unsigned int maxRadix, const unsigned int digits) {
             for (j = 1; j < digits; j++) {
                 arraySize *= r;
             }
-            if ((digitSumLookup[r] = (unsigned char *)malloc(arraySize * sizeof(unsigned char)))) {
+            if ((digitSumLookup[r] = (uint8_t *)malloc(arraySize * sizeof(uint8_t)))) {
                 // keep track of allocation size
-                allocated += arraySize * sizeof(unsigned char);
+                allocated += arraySize * sizeof(uint8_t);
 
                 // populate the array
                 current = digitSumLookup[r];
@@ -108,8 +111,8 @@ void initDigitSums(const unsigned int maxRadix, const unsigned int digits) {
 
 
 // free 4 digit sum lookup array
-void freeDigitSums(unsigned int maxRadix) {
-    unsigned long r;
+void freeDigitSums(uint32_t maxRadix) {
+    uint64_t r;
 
     // check if the array is allocated
     if (digitSumLookup) {
@@ -131,16 +134,16 @@ void freeDigitSums(unsigned int maxRadix) {
 
 
 // compute the digit sum of the given value in the given radix using groups of 4 digits
-// and returns whether that digit sum is prime
+// and return whether that digit sum is prime
 // Note: requires the digitSumLookup arrays to be allocated and populated
 //       and the smallprimes array to be allocated and populated
-bool sumDigitsIsPrime(unsigned long number, unsigned int radix) {
+bool sumDigitsIsPrime(uint64_t number, uint32_t radix) {
     // zero the sum
-    unsigned long sum = 0;
-    unsigned long dividor = 0;
+    uint64_t sum = 0;
+    uint64_t dividor = 0;
 
     // get the lookup array for the given radix
-    unsigned char *lookup = digitSumLookup[radix];
+    uint8_t *lookup = digitSumLookup[radix];
 
     // multiply the radix for 4 digits
     radix *= radix;
@@ -174,9 +177,9 @@ bool sumDigitsIsPrime(unsigned long number, unsigned int radix) {
 // display the results for a given value
 // re-compute the digit sums here since it's faster than storing them
 // during the search
-void displayResult(uint64_t value, unsigned int radix) {
+void displayResult(const uint64_t value, const uint32_t radix) {
     printf("%u: [%'lu] ", radix - 1, value);
-    for (unsigned int i = 2; i <= radix; i++) {
+    for (uint32_t i = 2; i <= radix; i++) {
         printf(" %u", sumDigits(value, i));
     }
     printf("\n");
@@ -252,44 +255,34 @@ bool isPrime(uint64_t value) {
 // check primes in the given range for consecutive number base digit sum primes
 // Note: requires "from" value to be in the form 30k+7
 //       works for radix values >= 32
-uint64_t checkRange32Plus(uint64_t from, uint64_t to, unsigned int radix) {
-    unsigned int digitsum = 0;
-    unsigned int r = 0;
+uint64_t checkRange32Plus(uint64_t from, const uint64_t to, const uint32_t radix) {
+    uint32_t digitsum = 0;
+    uint32_t r = 0;
 
     while (from <= to) {
-#ifdef METRICS
-checks++;
-plus32++;
-#endif
+METRIC(checks)
+METRIC(plus32)
         // do a quick check for base 2
         if (smallprimes[_mm_popcnt_u64(from)]) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
                 digitsum += (_mm_popcnt_u64(from & 0x4924924924924924UL)) << 2;
                 if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate8++;
-#endif
+METRIC(gate8)
                     // do a quick check for base 16
                     digitsum = _mm_popcnt_u64(from & 0x1111111111111111UL);
                     digitsum += (_mm_popcnt_u64(from & 0x2222222222222222UL)) << 1;
                     digitsum += (_mm_popcnt_u64(from & 0x4444444444444444UL)) << 2;
                     digitsum += (_mm_popcnt_u64(from & 0x8888888888888888UL)) << 3;
                     if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate16++;
-#endif
+METRIC(gate16)
                         // do a quick check for base 32
                         digitsum = _mm_popcnt_u64(from & 0x1084210842108421UL);
                         digitsum += (_mm_popcnt_u64(from & 0x2108421084210842UL)) << 1;
@@ -297,22 +290,16 @@ gate16++;
                         digitsum += (_mm_popcnt_u64(from & 0x8421084210842108UL)) << 3;
                         digitsum += (_mm_popcnt_u64(from & 0x0842108421084210UL)) << 4;
                         if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate32++;
-#endif
+METRIC(gate32)
                             // check other bases starting at the largest since it will have fewest digits
                             r = radix;
                             while (r > 2 && sumDigitsIsPrime(from, r)) {
                                 r--;
                             }
                             if (r == 2) { 
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                                 if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                                     return from;
                                 }
                             }
@@ -325,39 +312,29 @@ primes++;
         // go to next value
         from += 4;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         if (smallprimes[_mm_popcnt_u64(from)]) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
                 digitsum += (_mm_popcnt_u64(from & 0x4924924924924924UL)) << 2;
                 if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate8++;
-#endif
+METRIC(gate8)
                     // do a quick check for base 16
                     digitsum = _mm_popcnt_u64(from & 0x1111111111111111UL);
                     digitsum += (_mm_popcnt_u64(from & 0x2222222222222222UL)) << 1;
                     digitsum += (_mm_popcnt_u64(from & 0x4444444444444444UL)) << 2;
                     digitsum += (_mm_popcnt_u64(from & 0x8888888888888888UL)) << 3;
                     if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate16++;
-#endif
+METRIC(gate16)
                         // do a quick check for base 32
                         digitsum = _mm_popcnt_u64(from & 0x1084210842108421UL);
                         digitsum += (_mm_popcnt_u64(from & 0x2108421084210842UL)) << 1;
@@ -365,22 +342,16 @@ gate16++;
                         digitsum += (_mm_popcnt_u64(from & 0x8421084210842108UL)) << 3;
                         digitsum += (_mm_popcnt_u64(from & 0x0842108421084210UL)) << 4;
                         if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate32++;
-#endif
+METRIC(gate32)
                             // check other bases starting at the largest since it will have fewest digits
                             r = radix;
                             while (r > 2 && sumDigitsIsPrime(from, r)) {
                                 r--;
                             }
                             if (r == 2) { 
-    #ifdef METRICS
-    sums++;
-    #endif
+METRIC(sums)
                                 if (isPrime(from)) {
-    #ifdef METRICS
-    primes++;
-    #endif
+METRIC(primes)
                                     return from;
                                 }
                             }
@@ -393,39 +364,29 @@ gate32++;
         // go to next value
         from += 2;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         if (smallprimes[_mm_popcnt_u64(from)]) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
                 digitsum += (_mm_popcnt_u64(from & 0x4924924924924924UL)) << 2;
                 if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate8++;
-#endif
+METRIC(gate8)
                     // do a quick check for base 16
                     digitsum = _mm_popcnt_u64(from & 0x1111111111111111UL);
                     digitsum += (_mm_popcnt_u64(from & 0x2222222222222222UL)) << 1;
                     digitsum += (_mm_popcnt_u64(from & 0x4444444444444444UL)) << 2;
                     digitsum += (_mm_popcnt_u64(from & 0x8888888888888888UL)) << 3;
                     if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate16++;
-#endif
+METRIC(gate16)
                         // do a quick check for base 32
                         digitsum = _mm_popcnt_u64(from & 0x1084210842108421UL);
                         digitsum += (_mm_popcnt_u64(from & 0x2108421084210842UL)) << 1;
@@ -433,22 +394,16 @@ gate16++;
                         digitsum += (_mm_popcnt_u64(from & 0x8421084210842108UL)) << 3;
                         digitsum += (_mm_popcnt_u64(from & 0x0842108421084210UL)) << 4;
                         if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate32++;
-#endif
+METRIC(gate32)
                             // check other bases starting at the largest since it will have fewest digits
                             r = radix;
                             while (r > 2 && sumDigitsIsPrime(from, r)) {
                                 r--;
                             }
                             if (r == 2) { 
-    #ifdef METRICS
-    sums++;
-    #endif
+METRIC(sums)
                                 if (isPrime(from)) {
-    #ifdef METRICS
-    primes++;
-    #endif
+METRIC(primes)
                                     return from;
                                 }
                             }
@@ -461,39 +416,29 @@ gate32++;
         // go to next value
         from += 4;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         if (smallprimes[_mm_popcnt_u64(from)]) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
                 digitsum += (_mm_popcnt_u64(from & 0x4924924924924924UL)) << 2;
                 if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate8++;
-#endif
+METRIC(gate8)
                     // do a quick check for base 16
                     digitsum = _mm_popcnt_u64(from & 0x1111111111111111UL);
                     digitsum += (_mm_popcnt_u64(from & 0x2222222222222222UL)) << 1;
                     digitsum += (_mm_popcnt_u64(from & 0x4444444444444444UL)) << 2;
                     digitsum += (_mm_popcnt_u64(from & 0x8888888888888888UL)) << 3;
                     if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate16++;
-#endif
+METRIC(gate16)
                         // do a quick check for base 32
                         digitsum = _mm_popcnt_u64(from & 0x1084210842108421UL);
                         digitsum += (_mm_popcnt_u64(from & 0x2108421084210842UL)) << 1;
@@ -501,22 +446,16 @@ gate16++;
                         digitsum += (_mm_popcnt_u64(from & 0x8421084210842108UL)) << 3;
                         digitsum += (_mm_popcnt_u64(from & 0x0842108421084210UL)) << 4;
                         if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate32++;
-#endif
+METRIC(gate32)
                             // check other bases starting at the largest since it will have fewest digits
                             r = radix;
                             while (r > 2 && sumDigitsIsPrime(from, r)) {
                                 r--;
                             }
                             if (r == 2) { 
-    #ifdef METRICS
-    sums++;
-    #endif
+METRIC(sums)
                                 if (isPrime(from)) {
-    #ifdef METRICS
-    primes++;
-    #endif
+METRIC(primes)
                                     return from;
                                 }
                             }
@@ -529,39 +468,29 @@ gate32++;
         // go to next value
         from += 2;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         if (smallprimes[_mm_popcnt_u64(from)]) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
                 digitsum += (_mm_popcnt_u64(from & 0x4924924924924924UL)) << 2;
                 if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate8++;
-#endif
+METRIC(gate8)
                     // do a quick check for base 16
                     digitsum = _mm_popcnt_u64(from & 0x1111111111111111UL);
                     digitsum += (_mm_popcnt_u64(from & 0x2222222222222222UL)) << 1;
                     digitsum += (_mm_popcnt_u64(from & 0x4444444444444444UL)) << 2;
                     digitsum += (_mm_popcnt_u64(from & 0x8888888888888888UL)) << 3;
                     if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate16++;
-#endif
+METRIC(gate16)
                         // do a quick check for base 32
                         digitsum = _mm_popcnt_u64(from & 0x1084210842108421UL);
                         digitsum += (_mm_popcnt_u64(from & 0x2108421084210842UL)) << 1;
@@ -569,22 +498,16 @@ gate16++;
                         digitsum += (_mm_popcnt_u64(from & 0x8421084210842108UL)) << 3;
                         digitsum += (_mm_popcnt_u64(from & 0x0842108421084210UL)) << 4;
                         if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate32++;
-#endif
+METRIC(gate32)
                             // check other bases starting at the largest since it will have fewest digits
                             r = radix;
                             while (r > 2 && sumDigitsIsPrime(from, r)) {
                                 r--;
                             }
                             if (r == 2) { 
-    #ifdef METRICS
-    sums++;
-    #endif
+METRIC(sums)
                                 if (isPrime(from)) {
-    #ifdef METRICS
-    primes++;
-    #endif
+METRIC(primes)
                                     return from;
                                 }
                             }
@@ -597,39 +520,29 @@ gate32++;
         // go to next value
         from += 4;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         if (smallprimes[_mm_popcnt_u64(from)]) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
                 digitsum += (_mm_popcnt_u64(from & 0x4924924924924924UL)) << 2;
                 if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate8++;
-#endif
+METRIC(gate8)
                     // do a quick check for base 16
                     digitsum = _mm_popcnt_u64(from & 0x1111111111111111UL);
                     digitsum += (_mm_popcnt_u64(from & 0x2222222222222222UL)) << 1;
                     digitsum += (_mm_popcnt_u64(from & 0x4444444444444444UL)) << 2;
                     digitsum += (_mm_popcnt_u64(from & 0x8888888888888888UL)) << 3;
                     if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate16++;
-#endif
+METRIC(gate16)
                         // do a quick check for base 32
                         digitsum = _mm_popcnt_u64(from & 0x1084210842108421UL);
                         digitsum += (_mm_popcnt_u64(from & 0x2108421084210842UL)) << 1;
@@ -637,22 +550,16 @@ gate16++;
                         digitsum += (_mm_popcnt_u64(from & 0x8421084210842108UL)) << 3;
                         digitsum += (_mm_popcnt_u64(from & 0x0842108421084210UL)) << 4;
                         if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate32++;
-#endif
+METRIC(gate32)
                             // check other bases starting at the largest since it will have fewest digits
                             r = radix;
                             while (r > 2 && sumDigitsIsPrime(from, r)) {
                                 r--;
                             }
                             if (r == 2) { 
-    #ifdef METRICS
-    sums++;
-    #endif
+METRIC(sums)
                                 if (isPrime(from)) {
-    #ifdef METRICS
-    primes++;
-    #endif
+METRIC(primes)
                                     return from;
                                 }
                             }
@@ -665,39 +572,29 @@ gate32++;
         // go to next value
         from += 6;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         if (smallprimes[_mm_popcnt_u64(from)]) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
                 digitsum += (_mm_popcnt_u64(from & 0x4924924924924924UL)) << 2;
                 if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate8++;
-#endif
+METRIC(gate8)
                     // do a quick check for base 16
                     digitsum = _mm_popcnt_u64(from & 0x1111111111111111UL);
                     digitsum += (_mm_popcnt_u64(from & 0x2222222222222222UL)) << 1;
                     digitsum += (_mm_popcnt_u64(from & 0x4444444444444444UL)) << 2;
                     digitsum += (_mm_popcnt_u64(from & 0x8888888888888888UL)) << 3;
                     if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate16++;
-#endif
+METRIC(gate16)
                         // do a quick check for base 32
                         digitsum = _mm_popcnt_u64(from & 0x1084210842108421UL);
                         digitsum += (_mm_popcnt_u64(from & 0x2108421084210842UL)) << 1;
@@ -705,22 +602,16 @@ gate16++;
                         digitsum += (_mm_popcnt_u64(from & 0x8421084210842108UL)) << 3;
                         digitsum += (_mm_popcnt_u64(from & 0x0842108421084210UL)) << 4;
                         if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate32++;
-#endif
+METRIC(gate32)
                             // check other bases starting at the largest since it will have fewest digits
                             r = radix;
                             while (r > 2 && sumDigitsIsPrime(from, r)) {
                                 r--;
                             }
                             if (r == 2) { 
-    #ifdef METRICS
-    sums++;
-    #endif
+METRIC(sums)
                                 if (isPrime(from)) {
-    #ifdef METRICS
-    primes++;
-    #endif
+METRIC(primes)
                                     return from;
                                 }
                             }
@@ -733,39 +624,29 @@ gate32++;
         // go to next value
         from += 2;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         if (smallprimes[_mm_popcnt_u64(from)]) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
                 digitsum += (_mm_popcnt_u64(from & 0x4924924924924924UL)) << 2;
                 if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate8++;
-#endif
+METRIC(gate8)
                     // do a quick check for base 16
                     digitsum = _mm_popcnt_u64(from & 0x1111111111111111UL);
                     digitsum += (_mm_popcnt_u64(from & 0x2222222222222222UL)) << 1;
                     digitsum += (_mm_popcnt_u64(from & 0x4444444444444444UL)) << 2;
                     digitsum += (_mm_popcnt_u64(from & 0x8888888888888888UL)) << 3;
                     if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate16++;
-#endif
+METRIC(gate16)
                         // do a quick check for base 32
                         digitsum = _mm_popcnt_u64(from & 0x1084210842108421UL);
                         digitsum += (_mm_popcnt_u64(from & 0x2108421084210842UL)) << 1;
@@ -773,22 +654,16 @@ gate16++;
                         digitsum += (_mm_popcnt_u64(from & 0x8421084210842108UL)) << 3;
                         digitsum += (_mm_popcnt_u64(from & 0x0842108421084210UL)) << 4;
                         if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate32++;
-#endif
+METRIC(gate32)
                             // check other bases starting at the largest since it will have fewest digits
                             r = radix;
                             while (r > 2 && sumDigitsIsPrime(from, r)) {
                                 r--;
                             }
                             if (r == 2) { 
-    #ifdef METRICS
-    sums++;
-    #endif
+METRIC(sums)
                                 if (isPrime(from)) {
-    #ifdef METRICS
-    primes++;
-    #endif
+METRIC(primes)
                                     return from;
                                 }
                             }
@@ -810,57 +685,42 @@ gate32++;
 // check primes in the given range for consecutive number base digit sum primes
 // Note: requires "from" value to be in the form 30k+7
 //       works for radix values >= 16 and < 31
-uint64_t checkRange16To31(uint64_t from, uint64_t to, unsigned int radix) {
-    unsigned int digitsum = 0;
-    unsigned int r = 0;
+uint64_t checkRange16To31(uint64_t from, const uint64_t to, const uint32_t radix) {
+    uint32_t digitsum = 0;
+    uint32_t r = 0;
 
     while (from <= to) {
-#ifdef METRICS
-checks++;
-plus16++;
-#endif
+METRIC(checks)
+METRIC(plus16)
         // do a quick check for base 2
         if (smallprimes[_mm_popcnt_u64(from)]) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
                 digitsum += (_mm_popcnt_u64(from & 0x4924924924924924UL)) << 2;
                 if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate8++;
-#endif
+METRIC(gate8)
                     // do a quick check for base 16
                     digitsum = _mm_popcnt_u64(from & 0x1111111111111111UL);
                     digitsum += (_mm_popcnt_u64(from & 0x2222222222222222UL)) << 1;
                     digitsum += (_mm_popcnt_u64(from & 0x4444444444444444UL)) << 2;
                     digitsum += (_mm_popcnt_u64(from & 0x8888888888888888UL)) << 3;
                     if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate16++;
-#endif
                         // check other bases starting at the largest since it will have fewest digits
                         r = radix;
                         while (r > 2 && sumDigitsIsPrime(from, r)) {
                             r--;
                         }
                         if (r == 2) { 
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                             if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                                 return from;
                             }
                         }
@@ -872,52 +732,37 @@ primes++;
         // go to next value
         from += 4;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         if (smallprimes[_mm_popcnt_u64(from)]) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
                 digitsum += (_mm_popcnt_u64(from & 0x4924924924924924UL)) << 2;
                 if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate8++;
-#endif
+METRIC(gate8)
                     // do a quick check for base 16
                     digitsum = _mm_popcnt_u64(from & 0x1111111111111111UL);
                     digitsum += (_mm_popcnt_u64(from & 0x2222222222222222UL)) << 1;
                     digitsum += (_mm_popcnt_u64(from & 0x4444444444444444UL)) << 2;
                     digitsum += (_mm_popcnt_u64(from & 0x8888888888888888UL)) << 3;
                     if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate16++;
-#endif
                         // check other bases starting at the largest since it will have fewest digits
                         r = radix;
                         while (r > 2 && sumDigitsIsPrime(from, r)) {
                             r--;
                         }
                         if (r == 2) { 
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                             if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                                 return from;
                             }
                         }
@@ -929,52 +774,37 @@ primes++;
         // go to next value
         from += 2;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         if (smallprimes[_mm_popcnt_u64(from)]) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
                 digitsum += (_mm_popcnt_u64(from & 0x4924924924924924UL)) << 2;
                 if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate8++;
-#endif
+METRIC(gate8)
                     // do a quick check for base 16
                     digitsum = _mm_popcnt_u64(from & 0x1111111111111111UL);
                     digitsum += (_mm_popcnt_u64(from & 0x2222222222222222UL)) << 1;
                     digitsum += (_mm_popcnt_u64(from & 0x4444444444444444UL)) << 2;
                     digitsum += (_mm_popcnt_u64(from & 0x8888888888888888UL)) << 3;
                     if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate16++;
-#endif
                         // check other bases starting at the largest since it will have fewest digits
                         r = radix;
                         while (r > 2 && sumDigitsIsPrime(from, r)) {
                             r--;
                         }
                         if (r == 2) { 
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                             if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                                 return from;
                             }
                         }
@@ -986,52 +816,37 @@ primes++;
         // go to next value
         from += 4;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         if (smallprimes[_mm_popcnt_u64(from)]) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
                 digitsum += (_mm_popcnt_u64(from & 0x4924924924924924UL)) << 2;
                 if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate8++;
-#endif
+METRIC(gate8)
                     // do a quick check for base 16
                     digitsum = _mm_popcnt_u64(from & 0x1111111111111111UL);
                     digitsum += (_mm_popcnt_u64(from & 0x2222222222222222UL)) << 1;
                     digitsum += (_mm_popcnt_u64(from & 0x4444444444444444UL)) << 2;
                     digitsum += (_mm_popcnt_u64(from & 0x8888888888888888UL)) << 3;
                     if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate16++;
-#endif
                         // check other bases starting at the largest since it will have fewest digits
                         r = radix;
                         while (r > 2 && sumDigitsIsPrime(from, r)) {
                             r--;
                         }
                         if (r == 2) { 
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                             if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                                 return from;
                             }
                         }
@@ -1043,52 +858,37 @@ primes++;
         // go to next value
         from += 2;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         if (smallprimes[_mm_popcnt_u64(from)]) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
                 digitsum += (_mm_popcnt_u64(from & 0x4924924924924924UL)) << 2;
                 if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate8++;
-#endif
+METRIC(gate8)
                     // do a quick check for base 16
                     digitsum = _mm_popcnt_u64(from & 0x1111111111111111UL);
                     digitsum += (_mm_popcnt_u64(from & 0x2222222222222222UL)) << 1;
                     digitsum += (_mm_popcnt_u64(from & 0x4444444444444444UL)) << 2;
                     digitsum += (_mm_popcnt_u64(from & 0x8888888888888888UL)) << 3;
                     if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate16++;
-#endif
                         // check other bases starting at the largest since it will have fewest digits
                         r = radix;
                         while (r > 2 && sumDigitsIsPrime(from, r)) {
                             r--;
                         }
                         if (r == 2) { 
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                             if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                                 return from;
                             }
                         }
@@ -1100,52 +900,37 @@ primes++;
         // go to next value
         from += 4;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         if (smallprimes[_mm_popcnt_u64(from)]) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
                 digitsum += (_mm_popcnt_u64(from & 0x4924924924924924UL)) << 2;
                 if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate8++;
-#endif
+METRIC(gate8)
                     // do a quick check for base 16
                     digitsum = _mm_popcnt_u64(from & 0x1111111111111111UL);
                     digitsum += (_mm_popcnt_u64(from & 0x2222222222222222UL)) << 1;
                     digitsum += (_mm_popcnt_u64(from & 0x4444444444444444UL)) << 2;
                     digitsum += (_mm_popcnt_u64(from & 0x8888888888888888UL)) << 3;
                     if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate16++;
-#endif
                         // check other bases starting at the largest since it will have fewest digits
                         r = radix;
                         while (r > 2 && sumDigitsIsPrime(from, r)) {
                             r--;
                         }
                         if (r == 2) { 
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                             if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                                 return from;
                             }
                         }
@@ -1157,52 +942,37 @@ primes++;
         // go to next value
         from += 6;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         if (smallprimes[_mm_popcnt_u64(from)]) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
                 digitsum += (_mm_popcnt_u64(from & 0x4924924924924924UL)) << 2;
                 if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate8++;
-#endif
+METRIC(gate8)
                     // do a quick check for base 16
                     digitsum = _mm_popcnt_u64(from & 0x1111111111111111UL);
                     digitsum += (_mm_popcnt_u64(from & 0x2222222222222222UL)) << 1;
                     digitsum += (_mm_popcnt_u64(from & 0x4444444444444444UL)) << 2;
                     digitsum += (_mm_popcnt_u64(from & 0x8888888888888888UL)) << 3;
                     if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate16++;
-#endif
                         // check other bases starting at the largest since it will have fewest digits
                         r = radix;
                         while (r > 2 && sumDigitsIsPrime(from, r)) {
                             r--;
                         }
                         if (r == 2) { 
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                             if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                                 return from;
                             }
                         }
@@ -1214,52 +984,37 @@ primes++;
         // go to next value
         from += 2;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         if (smallprimes[_mm_popcnt_u64(from)]) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
                 digitsum += (_mm_popcnt_u64(from & 0x4924924924924924UL)) << 2;
                 if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate8++;
-#endif
+METRIC(gate8)
                     // do a quick check for base 16
                     digitsum = _mm_popcnt_u64(from & 0x1111111111111111UL);
                     digitsum += (_mm_popcnt_u64(from & 0x2222222222222222UL)) << 1;
                     digitsum += (_mm_popcnt_u64(from & 0x4444444444444444UL)) << 2;
                     digitsum += (_mm_popcnt_u64(from & 0x8888888888888888UL)) << 3;
                     if (smallprimes[digitsum]) {
-#ifdef METRICS
-gate16++;
-#endif
                         // check other bases starting at the largest since it will have fewest digits
                         r = radix;
                         while (r > 2 && sumDigitsIsPrime(from, r)) {
                             r--;
                         }
                         if (r == 2) { 
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                             if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                                 return from;
                             }
                         }
@@ -1280,29 +1035,23 @@ primes++;
 // check primes in the given range for consecutive number base digit sum primes
 // Note: requires "from" value to be in the form 30k+7
 //       works for radix values < 16
-uint64_t checkRangeSub16(uint64_t from, uint64_t to, unsigned int radix) {
+uint64_t checkRangeSub16(uint64_t from, const uint64_t to, const uint32_t radix) {
     bool allprime = false;
 
     while (from <= to) {
-#ifdef METRICS
-checks++;
-sub16++;
-#endif
+METRIC(checks)
+METRIC(sub16)
         // do a quick check for base 2
-        unsigned int digitsum = _mm_popcnt_u64(from);
+        uint32_t digitsum = _mm_popcnt_u64(from);
         allprime = smallprimes[digitsum];
         if (allprime && radix >= 4) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             allprime = smallprimes[digitsum];
             if (allprime && radix >= 8) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
@@ -1313,24 +1062,18 @@ gate4++;
 
         // if quick tests passed then try other bases
         if (allprime) {
-#ifdef METRICS
-gate16++;
-#endif
+METRIC(gate16)
             // check other bases starting at the largest since it will have fewest digits
-            unsigned int r = radix;
+            uint32_t r = radix;
             while (allprime && r > 2) {
                 // check if the sum of digits in the base is prime
                 allprime = sumDigitsIsPrime(from, r);
                 r--;
             }
             if (allprime) {
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                 if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                     return from;
                 }
             }
@@ -1339,24 +1082,18 @@ primes++;
         // go to next value
         from += 4;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         digitsum = _mm_popcnt_u64(from);
         allprime = smallprimes[digitsum];
         if (allprime && radix >= 4) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             allprime = smallprimes[digitsum];
             if (allprime && radix >= 8) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
@@ -1367,24 +1104,18 @@ gate4++;
 
         // if quick tests passed then try other bases
         if (allprime) {
-#ifdef METRICS
-gate16++;
-#endif
+METRIC(gate16)
             // check other bases starting at the largest since it will have fewest digits
-            unsigned int r = radix;
+            uint32_t r = radix;
             while (allprime && r > 2) {
                 // check if the sum of digits in the base is prime
                 allprime = sumDigitsIsPrime(from, r);
                 r--;
             }
             if (allprime) {
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                 if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                     return from;
                 }
             }
@@ -1393,24 +1124,18 @@ primes++;
         // go to next value
         from += 2;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         digitsum = _mm_popcnt_u64(from);
         allprime = smallprimes[digitsum];
         if (allprime && radix >= 4) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             allprime = smallprimes[digitsum];
             if (allprime && radix >= 8) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
@@ -1421,24 +1146,18 @@ gate4++;
 
         // if quick tests passed then try other bases
         if (allprime) {
-#ifdef METRICS
-gate16++;
-#endif
+METRIC(gate16)
             // check other bases starting at the largest since it will have fewest digits
-            unsigned int r = radix;
+            uint32_t r = radix;
             while (allprime && r > 2) {
                 // check if the sum of digits in the base is prime
                 allprime = sumDigitsIsPrime(from, r);
                 r--;
             }
             if (allprime) {
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                 if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                     return from;
                 }
             }
@@ -1447,24 +1166,18 @@ primes++;
         // go to next value
         from += 4;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         digitsum = _mm_popcnt_u64(from);
         allprime = smallprimes[digitsum];
         if (allprime && radix >= 4) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             allprime = smallprimes[digitsum];
             if (allprime && radix >= 8) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
@@ -1475,24 +1188,18 @@ gate4++;
 
         // if quick tests passed then try other bases
         if (allprime) {
-#ifdef METRICS
-gate16++;
-#endif
+METRIC(gate16)
             // check other bases starting at the largest since it will have fewest digits
-            unsigned int r = radix;
+            uint32_t r = radix;
             while (allprime && r > 2) {
                 // check if the sum of digits in the base is prime
                 allprime = sumDigitsIsPrime(from, r);
                 r--;
             }
             if (allprime) {
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                 if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                     return from;
                 }
             }
@@ -1501,24 +1208,18 @@ primes++;
         // go to next value
         from += 2;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         digitsum = _mm_popcnt_u64(from);
         allprime = smallprimes[digitsum];
         if (allprime && radix >= 4) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             allprime = smallprimes[digitsum];
             if (allprime && radix >= 8) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
@@ -1529,24 +1230,18 @@ gate4++;
 
         // if quick tests passed then try other bases
         if (allprime) {
-#ifdef METRICS
-gate16++;
-#endif
+METRIC(gate16)
             // check other bases starting at the largest since it will have fewest digits
-            unsigned int r = radix;
+            uint32_t r = radix;
             while (allprime && r > 2) {
                 // check if the sum of digits in the base is prime
                 allprime = sumDigitsIsPrime(from, r);
                 r--;
             }
             if (allprime) {
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                 if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                     return from;
                 }
             }
@@ -1555,24 +1250,18 @@ primes++;
         // go to next value
         from += 4;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         digitsum = _mm_popcnt_u64(from);
         allprime = smallprimes[digitsum];
         if (allprime && radix >= 4) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             allprime = smallprimes[digitsum];
             if (allprime && radix >= 8) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
@@ -1583,24 +1272,18 @@ gate4++;
 
         // if quick tests passed then try other bases
         if (allprime) {
-#ifdef METRICS
-gate16++;
-#endif
+METRIC(gate16)
             // check other bases starting at the largest since it will have fewest digits
-            unsigned int r = radix;
+            uint32_t r = radix;
             while (allprime && r > 2) {
                 // check if the sum of digits in the base is prime
                 allprime = sumDigitsIsPrime(from, r);
                 r--;
             }
             if (allprime) {
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                 if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                     return from;
                 }
             }
@@ -1609,24 +1292,18 @@ primes++;
         // go to next value
         from += 6;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         digitsum = _mm_popcnt_u64(from);
         allprime = smallprimes[digitsum];
         if (allprime && radix >= 4) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             allprime = smallprimes[digitsum];
             if (allprime && radix >= 8) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
@@ -1637,24 +1314,18 @@ gate4++;
 
         // if quick tests passed then try other bases
         if (allprime) {
-#ifdef METRICS
-gate16++;
-#endif
+METRIC(gate16)
             // check other bases starting at the largest since it will have fewest digits
-            unsigned int r = radix;
+            uint32_t r = radix;
             while (allprime && r > 2) {
                 // check if the sum of digits in the base is prime
                 allprime = sumDigitsIsPrime(from, r);
                 r--;
             }
             if (allprime) {
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                 if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                     return from;
                 }
             }
@@ -1663,24 +1334,18 @@ primes++;
         // go to next value
         from += 2;
 
-#ifdef METRICS
-checks++;
-#endif
+METRIC(checks)
         // do a quick check for base 2
         digitsum = _mm_popcnt_u64(from);
         allprime = smallprimes[digitsum];
         if (allprime && radix >= 4) {
-#ifdef METRICS
-gate2++;
-#endif
+METRIC(gate2)
             // do a quick check for base 4
             digitsum = _mm_popcnt_u64(from & 0x5555555555555555UL);
             digitsum += (_mm_popcnt_u64(from & 0xAAAAAAAAAAAAAAAAUL)) << 1;
             allprime = smallprimes[digitsum];
             if (allprime && radix >= 8) {
-#ifdef METRICS
-gate4++;
-#endif
+METRIC(gate4)
                 // do a quick check for base 8
                 digitsum = _mm_popcnt_u64(from & 0x9249249249249249UL);
                 digitsum += (_mm_popcnt_u64(from & 0x2492492492492492UL)) << 1;
@@ -1691,24 +1356,18 @@ gate4++;
 
         // if quick tests passed then try other bases
         if (allprime) {
-#ifdef METRICS
-gate16++;
-#endif
+METRIC(gate16)
             // check other bases starting at the largest since it will have fewest digits
-            unsigned int r = radix;
+            uint32_t r = radix;
             while (allprime && r > 2) {
                 // check if the sum of digits in the base is prime
                 allprime = sumDigitsIsPrime(from, r);
                 r--;
             }
             if (allprime) {
-#ifdef METRICS
-sums++;
-#endif
+METRIC(sums)
                 if (isPrime(from)) {
-#ifdef METRICS
-primes++;
-#endif
+METRIC(primes)
                     return from;
                 }
             }
@@ -1724,18 +1383,18 @@ primes++;
 
 
 // initialize fast prime lookup for digit sums
-void initPrimes(unsigned int base) {
+void initPrimes(const uint32_t base) {
     // calculate maximum number of digits in the given base
-    unsigned int number = ceil(log((double)ULLONG_MAX) / log((double)base));
+    uint32_t number = ceil(log((double)ULLONG_MAX) / log((double)base));
 
     // calculate the largest digit sum
-    unsigned int largestds = number * (base - 1);
+    uint32_t largestds = number * (base - 1);
 
     // allocate primes array
     smallprimes = (bool *)calloc(largestds, sizeof(*smallprimes));
 
     // populate primes array
-    for (unsigned int i = 0; i < largestds; i++) {
+    for (uint32_t i = 0; i < largestds; i++) {
         smallprimes[i] = isPrime(i);
     }
 
@@ -1752,7 +1411,7 @@ void freePrimes() {
 
 
 // validate command line arguments
-bool validateArguments(const char *program, uint64_t start, uint64_t end, unsigned int minradix, unsigned int maxradix) {
+bool validateArguments(const int8_t *program, const uint64_t start, const uint64_t end, const uint32_t minradix, const uint32_t maxradix) {
     if (minradix < 2 || minradix > 50 || maxradix < 2 || maxradix > 50) {
         fprintf(stderr, "%s: bases must be in the range 2 to 50\n", program);
         return false;
@@ -1768,13 +1427,13 @@ bool validateArguments(const char *program, uint64_t start, uint64_t end, unsign
 
 
 // main entry point
-int main(int argc, char **argv) {
+int32_t main(int32_t argc, char **argv) {
     uint64_t start = 0UL;
     uint64_t end = 0UL;
     uint64_t current = 0UL;
-    unsigned int radix = 16;
-    unsigned int maxradix = 50;
-    unsigned int maxmatch = 0;
+    uint32_t radix = 16;
+    uint32_t maxradix = 50;
+    uint32_t maxmatch = 0;
 
     // check command line
     if (argc != 5) {
@@ -1783,7 +1442,7 @@ int main(int argc, char **argv) {
     }
 
     // decode arguments
-    int argnum = 1;
+    int32_t argnum = 1;
     char *endptr = 0;
     start = strtoul(argv[argnum++], &endptr, 10);
     end = strtoul(argv[argnum++], &endptr, 10);
@@ -1809,6 +1468,7 @@ int main(int argc, char **argv) {
 
     // start timing
     struct timeval timer;
+    struct timeval next;
     gettimeofday(&timer, 0);
 
     // main search algo only supports 30k+7 values so check here for 3 and 5 if in requested range
@@ -1819,7 +1479,7 @@ int main(int argc, char **argv) {
     if (tinyend > 5) tinyend = 5;
 
     while (start <= tinyend && radix <= maxradix) {
-        unsigned int r = radix;
+        uint32_t r = radix;
         while (r > 2 && sumDigitsIsPrime(start, r)) {
             r--;
         }
@@ -1867,14 +1527,13 @@ int main(int argc, char **argv) {
     }
 
     // display elapsed time
-    struct timeval next;
     gettimeofday(&next, 0);
-    unsigned int t = (next.tv_sec * 1000000 + next.tv_usec) - (timer.tv_sec * 1000000 + timer.tv_usec);
+    uint32_t t = (next.tv_sec * 1000000 + next.tv_usec) - (timer.tv_sec * 1000000 + timer.tv_usec);
     printf("Time: %.2f seconds\n", (double)t / 1000000);
 
-#ifdef METRICS
     // display metrics
-    printf("Checks: %'lu\nSub16: %'lu\nPlus16: %'lu\nPlus32: %'lu\nGate2:  %'lu\nGate4:  %'lu\nGate8:  %'lu\nGate16: %'lu\nGate32: %'lu\nSums:   %'lu\nPrimes: %'lu\n", checks, sub16, plus16, plus32, gate2, gate4, gate8, gate16, gate32, sums, primes);
+#ifdef METRICS
+    printf("Checks: %'lu\nSub16: %'lu\nPlus16: %'lu\nPlus32: %'lu\nGate2:  %'lu\nGate4:  %'lu\nGate8:  %'lu\nGate16: %'lu\nGate32: %'lu\nSums: %'lu\nPrimes: %'lu\n", checks, sub16, plus16, plus32, gate2, gate4, gate8, gate16, gate32, sums, primes);
 #endif
 
     // free digit sums lookup
