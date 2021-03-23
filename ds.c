@@ -50,7 +50,7 @@ uint8_t **digitSumLookup = NULL;
 
 
 // compute the digit sum of the given value in the given radix
-uint32_t sumDigits(uint64_t value, const uint32_t radix) {
+uint64_t sumDigits(uint64_t value, const uint32_t radix) {
     // zero the sum
     uint64_t sum = 0;
     uint64_t dividor = 0;
@@ -137,7 +137,12 @@ void freeDigitSums(uint32_t maxRadix) {
 // and return whether that digit sum is prime
 // Note: requires the digitSumLookup arrays to be allocated and populated
 //       and the smallprimes array to be allocated and populated
+// Note: returns true for any radix that is a power of 2 since these will have been checked
+//       before
 bool sumDigitsIsPrime(uint64_t number, uint32_t radix) {
+    // if the radix is a power of two then bail since it will have already been validated
+    if (_mm_popcnt_u32(radix) == 1) return true;
+
     // zero the sum
     uint64_t sum = 0;
     uint64_t dividor = 0;
@@ -180,7 +185,7 @@ bool sumDigitsIsPrime(uint64_t number, uint32_t radix) {
 void displayResult(const uint64_t value, const uint32_t radix) {
     printf("%u: [%'lu] ", radix - 1, value);
     for (uint32_t i = 2; i <= radix; i++) {
-        printf(" %u", sumDigits(value, i));
+        printf(" %lu", sumDigits(value, i));
     }
     printf("\n");
     fflush(stdout);
@@ -258,6 +263,15 @@ bool isPrime(uint64_t value) {
 uint64_t checkRange32Plus(uint64_t from, const uint64_t to, const uint32_t radix) {
     uint32_t digitsum = 0;
     uint32_t r = 0;
+    uint32_t rodd = radix;
+    uint32_t reven = radix;
+
+    // there are less prime digit sums in even number bases than odd so search even first
+    if ((radix & 1) == 0) {
+        rodd--;
+    } else {
+        reven--;
+    }
 
     while (from <= to) {
 METRIC(checks)
@@ -292,15 +306,21 @@ METRIC(gate16)
                         if (smallprimes[digitsum]) {
 METRIC(gate32)
                             // check other bases starting at the largest since it will have fewest digits
-                            r = radix;
+                            r = reven;
                             while (r > 2 && sumDigitsIsPrime(from, r)) {
-                                r--;
+                                r -= 2;
                             }
                             if (r == 2) { 
+                                r = rodd;
+                                while (r > 1 && sumDigitsIsPrime(from, r)) {
+                                    r -= 2;
+                                }
+                                if (r == 1) {
 METRIC(sums)
-                                if (isPrime(from)) {
+                                    if (isPrime(from)) {
 METRIC(primes)
-                                    return from;
+                                        return from;
+                                    }
                                 }
                             }
                         }
@@ -344,15 +364,21 @@ METRIC(gate16)
                         if (smallprimes[digitsum]) {
 METRIC(gate32)
                             // check other bases starting at the largest since it will have fewest digits
-                            r = radix;
+                            r = reven;
                             while (r > 2 && sumDigitsIsPrime(from, r)) {
-                                r--;
+                                r -= 2;
                             }
                             if (r == 2) { 
+                                r = rodd;
+                                while (r > 1 && sumDigitsIsPrime(from, r)) {
+                                    r -= 2;
+                                }
+                                if (r == 1) {
 METRIC(sums)
-                                if (isPrime(from)) {
+                                    if (isPrime(from)) {
 METRIC(primes)
-                                    return from;
+                                        return from;
+                                    }
                                 }
                             }
                         }
@@ -396,15 +422,21 @@ METRIC(gate16)
                         if (smallprimes[digitsum]) {
 METRIC(gate32)
                             // check other bases starting at the largest since it will have fewest digits
-                            r = radix;
+                            r = reven;
                             while (r > 2 && sumDigitsIsPrime(from, r)) {
-                                r--;
+                                r -= 2;
                             }
                             if (r == 2) { 
+                                r = rodd;
+                                while (r > 1 && sumDigitsIsPrime(from, r)) {
+                                    r -= 2;
+                                }
+                                if (r == 1) { 
 METRIC(sums)
-                                if (isPrime(from)) {
+                                    if (isPrime(from)) {
 METRIC(primes)
-                                    return from;
+                                        return from;
+                                    }
                                 }
                             }
                         }
@@ -448,15 +480,21 @@ METRIC(gate16)
                         if (smallprimes[digitsum]) {
 METRIC(gate32)
                             // check other bases starting at the largest since it will have fewest digits
-                            r = radix;
+                            r = reven;
                             while (r > 2 && sumDigitsIsPrime(from, r)) {
-                                r--;
+                                r -= 2;
                             }
                             if (r == 2) { 
+                                r = rodd;
+                                while (r > 1 && sumDigitsIsPrime(from, r)) {
+                                    r -= 2;
+                                }
+                                if (r == 1) { 
 METRIC(sums)
-                                if (isPrime(from)) {
+                                    if (isPrime(from)) {
 METRIC(primes)
-                                    return from;
+                                        return from;
+                                    }
                                 }
                             }
                         }
@@ -500,15 +538,21 @@ METRIC(gate16)
                         if (smallprimes[digitsum]) {
 METRIC(gate32)
                             // check other bases starting at the largest since it will have fewest digits
-                            r = radix;
+                            r = reven;
                             while (r > 2 && sumDigitsIsPrime(from, r)) {
-                                r--;
+                                r -= 2;
                             }
                             if (r == 2) { 
+                                r = rodd;
+                                while (r > 1 && sumDigitsIsPrime(from, r)) {
+                                    r -= 2;
+                                }
+                                if (r == 1) { 
 METRIC(sums)
-                                if (isPrime(from)) {
+                                    if (isPrime(from)) {
 METRIC(primes)
-                                    return from;
+                                        return from;
+                                    }
                                 }
                             }
                         }
@@ -552,15 +596,21 @@ METRIC(gate16)
                         if (smallprimes[digitsum]) {
 METRIC(gate32)
                             // check other bases starting at the largest since it will have fewest digits
-                            r = radix;
+                            r = reven;
                             while (r > 2 && sumDigitsIsPrime(from, r)) {
-                                r--;
+                                r -= 2;
                             }
                             if (r == 2) { 
+                                r = rodd;
+                                while (r > 1 && sumDigitsIsPrime(from, r)) {
+                                    r -= 2;
+                                }
+                                if (r == 1) { 
 METRIC(sums)
-                                if (isPrime(from)) {
+                                    if (isPrime(from)) {
 METRIC(primes)
-                                    return from;
+                                        return from;
+                                    }
                                 }
                             }
                         }
@@ -604,15 +654,21 @@ METRIC(gate16)
                         if (smallprimes[digitsum]) {
 METRIC(gate32)
                             // check other bases starting at the largest since it will have fewest digits
-                            r = radix;
+                            r = reven;
                             while (r > 2 && sumDigitsIsPrime(from, r)) {
-                                r--;
+                                r -= 2;
                             }
                             if (r == 2) { 
+                                r = rodd;
+                                while (r > 1 && sumDigitsIsPrime(from, r)) {
+                                    r -= 2;
+                                }
+                                if (r == 1) { 
 METRIC(sums)
-                                if (isPrime(from)) {
+                                    if (isPrime(from)) {
 METRIC(primes)
-                                    return from;
+                                        return from;
+                                    }
                                 }
                             }
                         }
@@ -656,15 +712,21 @@ METRIC(gate16)
                         if (smallprimes[digitsum]) {
 METRIC(gate32)
                             // check other bases starting at the largest since it will have fewest digits
-                            r = radix;
+                            r = reven;
                             while (r > 2 && sumDigitsIsPrime(from, r)) {
-                                r--;
+                                r -= 2;
                             }
                             if (r == 2) { 
+                                r = rodd;
+                                while (r > 1 && sumDigitsIsPrime(from, r)) {
+                                    r -= 2;
+                                }
+                                if (r == 1) { 
 METRIC(sums)
-                                if (isPrime(from)) {
+                                    if (isPrime(from)) {
 METRIC(primes)
-                                    return from;
+                                        return from;
+                                    }
                                 }
                             }
                         }
