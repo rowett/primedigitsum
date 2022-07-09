@@ -2,7 +2,8 @@
 # run prime search in parallel over multiple processor cores
 # auto start at last successfully completed block
 # Usage:
-# par [-c cores] [-d directory] [-r starting radix] [-s starting block]
+# par [-b] [-d directory] [-r starting radix] [-s starting block]
+#   -b          benchmark mode
 #   -c		number of cores to use
 #   -d		results directory
 #   -r          starting radix
@@ -10,7 +11,7 @@
 
 # set program name and command usage
 prog_name=`basename $0`
-usage="$prog_name [-c cores] [-d directory] [-r radix] [-s start]\n  -c\tnumber of cores to use\n  -d\tresults directory\n  -r\tstarting radix\n  -s\tstarting block number"
+usage="$prog_name [-b] [-c cores] [-d directory] [-r radix] [-s start]\n  -b\tbenchmark mode\n  -c\tnumber of cores to use\n  -d\tresults directory\n  -r\tstarting radix\n  -s\tstarting block number"
 
 # report error and exit
 error_exit() {
@@ -36,13 +37,19 @@ max_base=40
 # minimum number base for digit sum primes
 min_base=2
 
+# whether in benchmark mode
+benchmark=0
+
 # regular expression for number validation
 re='^[0-9]+$'
 
 # check for valid options
-while getopts "c:d:r:s:" opt
+while getopts "bc:d:r:s:" opt
 do
 	case "$opt" in
+        # benchmark mode
+        b)      benchmark=1
+                ;;
 	# number of cores
 	c)	num_cores=$OPTARG
 		# check it is a number
@@ -94,7 +101,12 @@ done
 shift $((OPTIND-1))
 
 # number of zeroes to add to block number
-zeroes=000000000000
+if [[ $benchmark == 1 ]]
+then
+    zeroes=00000000000
+else
+    zeroes=000000000000
+fi
 
 # check the directory exists
 if [[ ! -d "$dir" ]]
@@ -131,6 +143,7 @@ fi
 echo "Starting block: $block_num"
 echo "Block size: 1${zeroes}"
 echo "Number bases: $min_base to $max_base"
+echo "Results directory: $dir"
 
 # start a block on each processor core
 proc_num=0
@@ -154,9 +167,17 @@ do
                 block_num=$((block_num+1))
         done
 
-        # decrement processor number
+        # increment processor number
         proc_num=$((proc_num+1))
 done
+
+# if in benchmark mode then wait for subprocess to complete and exit
+if [[ $benchmark == 1 ]]
+then
+    echo "Waiting for benchmark to complete..."
+    wait
+    exit 0
+fi
 
 # check for completed blocks and start new ones
 while [[ true ]]

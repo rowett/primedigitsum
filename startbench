@@ -1,0 +1,88 @@
+#! /bin/bash
+# bench
+# run a benchmark
+
+# set program name and command usage
+prog_name=`basename $0`
+usage="$prog_name [-c cores]\n  -c\tnumber of cores to use"
+
+# terminal colours
+s_blue=`tput setaf 4`
+s_red=`tput setaf 1`
+s_cyan=`tput setaf 6`
+s_green=`tput setaf 2`
+s_standard=`tput setaf 7`
+
+# report error and exit
+error_exit() {
+        echo -e "${s_red}${prog_name}: $1${s_standard}\n$usage"
+        exit 1
+}
+
+# results file
+output=timing
+
+# block directory
+dir=benchmark
+
+# create the block directory for the benchmark
+mkdir -p $dir
+
+# create the results file
+echo "Benchmark results" > $output
+
+# get number of cores
+cores=`nproc`
+num_cores=$cores
+num=1
+
+# check for valid options
+while getopts "c:" opt
+do
+        case "$opt" in
+        # number of cores
+        c)      num_cores=$OPTARG
+                # check it is a number
+                if ! [[ $num_cores =~ $re ]]
+                then
+                        error_exit "cores must be a number"
+                else
+                        # check it is in range
+                        if [[ $num_cores -lt 1 || $num_cores -gt $cores ]]
+                        then
+                                error_exit "cores must be from 1 to $cores"
+                        fi
+                fi
+                ;;
+        # other flags are invalid
+        \?)     error_exit "invalid argument $OPTARG"
+        esac
+done
+shift $((OPTIND-1))
+
+# run test from 1 core to number of cores
+while [[ $num -le $num_cores ]]
+do
+    # short pause to allow CPU to cool
+    echo -e "${s_green}Cooling off...${s_standard}"
+    sleep 10
+
+    # clear previous results
+    rm -f ${dir}/*.txt
+
+    # run pards in benchmark mode
+    ./pards -b -c $num -d $dir
+
+    # capture results
+    echo -en "$num\t" >> $output
+    if [[ $num == 1 ]]
+    then
+        grep "Time" benchmark/*.txt | sed "s@Time: \([^ ]*\) seconds@\1@" | tr '\n' '\t' >> $output
+    else
+        grep "Time" benchmark/*.txt | sed "s@benchmark/\([0-9][0-9]*\).txt:Time: \([^ ]*\) seconds@\1\t\2@" | sort -n | cut -f 2 | tr '\n' '\t' >> $output
+    fi
+    echo >> $output
+    
+    num=$((num+1))
+done
+echo -e "${s_cyan}Benchmark complete - results are in file: ${s_green}$output${s_standard}"
