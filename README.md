@@ -75,8 +75,8 @@ On an AMD3950 **ds** can search a block of 1E12 numbers in around 5 minutes on a
 * To run the benchmark:
   * **% ./startbench**
 
-The output will be in a text file called *timing<date-stamp>.txt*.
+The output will be in a text file called *timing{date-stamp}.txt*.
 
-* To run the benchmark on a just 8 threads:
+* To run the benchmark on just 8 threads:
   * **% ./startbench -c 8**
 
