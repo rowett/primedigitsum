@@ -19,17 +19,14 @@ error_exit() {
         exit 1
 }
 
-# results file
-output=timing
+# results file containing datestamp
+output=timing-`date +%y%m%d%H%M%S`.txt
 
 # block directory
 dir=benchmark
 
 # create the block directory for the benchmark
 mkdir -p $dir
-
-# create the results file
-echo "Benchmark results" > $output
 
 # get number of cores
 cores=`nproc`
@@ -59,6 +56,15 @@ do
         esac
 done
 shift $((OPTIND-1))
+
+# create the results file
+if [[ $num_cores == 1 ]]
+then
+    echo -n "Benchmark results for $num_cores thread on " > $output
+else
+    echo -n "Benchmark results for $num_cores threads on " > $output
+fi
+lscpu | grep 'Model name:' | sed 's/Model name: *//' >> $output
 
 # run test from 1 core to number of cores
 while [[ $num -le $num_cores ]]

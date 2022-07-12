@@ -5,6 +5,9 @@ This software searches for *ds(n)* prime numbers. The search can be parallelized
 The search space is split into blocks of 1E12 numbers and distributed for processing amongst available cores.
 As each block is processed the result for that block is saved as text file in a **blocks/** directory and a new block is allocated to the core.
 
+There is also a benchmark which tests how searching scales across threads on your CPU.
+
+
 ## Requirements
 Linux, **gcc**, **make**, and a modern x64 CPU that supports the POPCNT instruction.
 
@@ -67,4 +70,13 @@ On an AMD3950 **ds** can search a block of 1E12 numbers in around 5 minutes on a
 * *ds(31)* can be found in about 3 days on a single core, or in about 2 hours and 30 minutes using 30 cores.
   * **% ./pards -c 30**
 
+
+## Benchmark
+* To run the benchmark:
+  * **% ./startbench**
+
+The output will be in a text file called *timing<date-stamp>.txt*.
+
+* To run the benchmark on a just 8 threads:
+  * **% ./startbench -c 8**
 
