@@ -30,6 +30,7 @@ dir=blocks
 
 # starting block
 block_num=0
+block_specified=0
 
 # maximum number base for digit sum primes
 max_base=40
@@ -88,6 +89,7 @@ do
 		;;
         # starting block number
         s)      block_num=$OPTARG
+                block_specified=1
 		# check it is a number
 		if ! [[ $block_num =~ $re ]]
 		then
@@ -128,12 +130,23 @@ then
     done
 fi
 
+# attempt to find latest block if one not specified
+if [[ $block_specified == 0 ]]
+then
+        latest_block=`ls $dir | sort -n | tail -1 | sed 's/.txt//'`
+        if [[ $latest_block =~ $re ]]
+        then
+            block_num=$latest_block
+        fi
+fi
+
 # skip blocks already processed
 while [[ -e $dir/$block_num.txt ]]
 do
         block_num=$((block_num+1))
 done
 
+# output header
 if [[ $num_cores == $processors ]]
 then
         echo "Using all $num_cores processor cores"

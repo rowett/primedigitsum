@@ -16,3 +16,6 @@ CC=gcc
 # ds executable
 ds: ds.c
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+
+clean:
+	rm -f ds
