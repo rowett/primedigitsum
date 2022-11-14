@@ -37,6 +37,7 @@ max_base=40
 
 # minimum number base for digit sum primes
 min_base=2
+min_base_specified=0
 
 # whether in benchmark mode
 benchmark=0
@@ -75,6 +76,7 @@ do
 		;;
 	# starting number base for digit sum primes
 	r)	min_base=$OPTARG
+                min_base_specified=1
 		# check it is a number
 		if ! [[ $min_base =~ $re ]]
 		then
@@ -117,7 +119,7 @@ then
 	exit 1
 fi
 
-# check for partical blocks
+# check for partial blocks
 set -- $dir/*.txt
 if [[ -e $1 ]]
 then
@@ -130,14 +132,27 @@ then
     done
 fi
 
+# remove temporary conversion files
+rm -f $dir/*.tmp
+
 # attempt to find latest block if one not specified
 if [[ $block_specified == 0 ]]
 then
-        latest_block=`ls $dir | sort -n | tail -1 | sed 's/.txt//'`
-        if [[ $latest_block =~ $re ]]
-        then
-            block_num=$latest_block
-        fi
+    latest_block=`ls $dir | sort -n | tail -1 | sed 's/.txt//'`
+    if [[ $latest_block =~ $re ]]
+    then
+        block_num=$latest_block
+    fi
+fi
+
+# attempt to find latest result if minimum base not specified
+if [[ $min_base_specified == 0 ]]
+then
+    latest_result=`./results | head -2 | tail -1 | cut -f 1`
+    if [[ $latest_result =~ $re ]]
+    then
+        min_base=$latest_result
+    fi
 fi
 
 # skip blocks already processed
@@ -239,6 +254,7 @@ do
 
                         # invoke search
                         (./ds $start_num $end_num $min_base $max_base > $dir/$block_num.tmp; mv $dir/$block_num.tmp $dir/$block_num.txt) &
+
                         new_active="$new_active $block_num"
                         block_num=$((block_num+1))
                 fi
