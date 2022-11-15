@@ -148,10 +148,10 @@ fi
 # attempt to find latest result if minimum base not specified
 if [[ $min_base_specified == 0 ]]
 then
-    latest_result=`./results | head -2 | tail -1 | cut -f 1`
+    latest_result=`./results -d $dir | head -2 | tail -1 | cut -f 1`
     if [[ $latest_result =~ $re ]]
     then
-        min_base=$latest_result
+        min_base=$((latest_result+2))
     fi
 fi
 
