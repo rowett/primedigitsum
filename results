@@ -112,7 +112,12 @@ do
 	echo -e "${s_cyan}Primes\tValues${s_standard}"
 
 	# sort the results files removing duplicate keys
-	sort -r -k1 -n -u $f | grep -v "[No|Check|Init]" | sed "s/\(.*\):/${s_green}\1\t${s_standard}/;s/ \[/\[/"
+        if [ $#{f} == 1 ]
+        then
+            echo "None"
+        else
+	    sort -r -k1 -n -u $f | grep -v "[No|Check|Init]" | sed "s/\(.*\):/${s_green}\1\t${s_standard}/;s/ \[/\[/"
+        fi
 
         # exit if refresh is zero
         if [[ $refresh_interval -eq 0 ]]

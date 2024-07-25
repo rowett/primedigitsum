@@ -168,6 +168,7 @@ do
         block_num=$((block_num+1))
 done
 
+
 # output header
 if [[ $num_threads == $processors ]]
 then

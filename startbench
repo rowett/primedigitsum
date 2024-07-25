@@ -4,7 +4,7 @@
 
 # set program name and command usage
 prog_name=`basename $0`
-usage="$prog_name [-c cores]\n  -c\tnumber of cores to use"
+usage="$prog_name [-t threads]\n  -t\tnumber of threads to use"
 
 # terminal colours
 s_blue=`tput setaf 4`
@@ -28,26 +28,26 @@ dir=benchmark
 # create the block directory for the benchmark
 mkdir -p $dir
 
-# get number of cores
-cores=`nproc`
-num_cores=$cores
+# get number of threads
+threads=`nproc`
+num_threads=$threads
 num=1
 
 # check for valid options
-while getopts "c:" opt
+while getopts "t:" opt
 do
         case "$opt" in
-        # number of cores
-        c)      num_cores=$OPTARG
+        # number of threads
+        c)      num_threads=$OPTARG
                 # check it is a number
-                if ! [[ $num_cores =~ $re ]]
+                if ! [[ $num_threads =~ $re ]]
                 then
-                        error_exit "cores must be a number"
+                        error_exit "threads must be a number"
                 else
                         # check it is in range
-                        if [[ $num_cores -lt 1 || $num_cores -gt $cores ]]
+                        if [[ $num_threads -lt 1 || $num_threads -gt $threads ]]
                         then
-                                error_exit "cores must be from 1 to $cores"
+                                error_exit "threads must be from 1 to $threads"
                         fi
                 fi
                 ;;
@@ -58,16 +58,16 @@ done
 shift $((OPTIND-1))
 
 # create the results file
-if [[ $num_cores == 1 ]]
+if [[ $num_threads == 1 ]]
 then
-    echo -n "Benchmark results for $num_cores thread on " > $output
+    echo -n "Benchmark results for $num_threads thread on " > $output
 else
-    echo -n "Benchmark results for $num_cores threads on " > $output
+    echo -n "Benchmark results for $num_threads threads on " > $output
 fi
 lscpu | grep 'Model name:' | sed 's/Model name: *//' >> $output
 
-# run test from 1 core to number of cores
-while [[ $num -le $num_cores ]]
+# run test from 1 core to number of threads
+while [[ $num -le $num_threads ]]
 do
     # short pause to allow CPU to cool
     echo -e "${s_green}Cooling off...${s_standard}"
@@ -77,7 +77,7 @@ do
     rm -f ${dir}/*.txt
 
     # run pards in benchmark mode
-    ./pards -b -c $num -d $dir
+    ./pards -b -t $num -d $dir
 
     # capture results
     echo -en "$num\t" >> $output
